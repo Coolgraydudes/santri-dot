@@ -1,29 +1,84 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { Button } from "../components/ui/button";
+import { UseAuthStore } from "../Auth/store.jsx/UseAuthStore";
+
+// Daftar field profil: dipakai untuk form edit maupun tampilan data
+const fields = [
+  {
+    name: "name",
+    label: "Name",
+    type: "text",
+    rules: {
+      required: "Nama wajib diisi",
+      minLength: { value: 3, message: "Nama minimal 3 karakter" },
+    },
+  },
+  {
+    name: "className",
+    label: "Class",
+    type: "text",
+    rules: { required: "Kelas wajib diisi" },
+  },
+  {
+    name: "nis",
+    label: "NIS",
+    type: "text",
+    rules: {
+      required: "NIS wajib diisi",
+      pattern: { value: /^\d+$/, message: "NIS harus berupa angka" },
+    },
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: {
+      required: "Email wajib diisi",
+      pattern: {
+        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: "Format email tidak valid",
+      },
+    },
+  },
+];
 
 function Profile() {
+  // Data user yang sedang login (dari store yang sama dengan SignIn)
+  const user = UseAuthStore((state) => state.user);
+  const updateUser = UseAuthStore((state) => state.updateUser);
+
   const [isEditing, setIsEditing] = useState(false);
 
-  const [form, setForm] = useState({
-    name: "Izzam",
-    className: "IX A",
-    nis: "20260001",
-    email: "santri@example.com",
+  // Data profil: awalnya diambil dari user yang login
+  const [profile, setProfile] = useState({
+    name: user?.name ?? "",
+    className: user?.className ?? "-",
+    nis: user?.nis ?? "-",
+    email: user?.email ?? "",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: profile,
+  });
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Klik Edit: isi form dengan data profil terbaru
+  const startEdit = () => {
+    reset(profile);
+    setIsEditing(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  // Klik Save: simpan data baru ke profil dan ke store
+  const onSubmit = (data) => {
+    setProfile(data);
+    updateUser(data);
     setIsEditing(false);
   };
 
@@ -74,87 +129,44 @@ function Profile() {
           <div>
             {isEditing ? (
               /* EDIT FORM */
-              <form onSubmit={handleSubmit} className="border-t border-black">
-                {/* NAME */}
-                <div className="border-b py-6">
-                  <label
-                    htmlFor="name"
-                    className="text-sm text-gray-400"
-                  >
-                    Name
-                  </label>
+              <form
+                noValidate
+                onSubmit={handleSubmit(onSubmit)}
+                className="border-t border-black"
+              >
+                {fields.map((field) => (
+                  <div key={field.name} className="border-b py-6">
+                    <label
+                      htmlFor={field.name}
+                      className="text-sm text-gray-400"
+                    >
+                      {field.label}
+                    </label>
 
-                  <input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="mt-2 w-full border-b border-gray-300 pb-2 font-medium outline-none focus:border-black"
-                  />
-                </div>
+                    <input
+                      id={field.name}
+                      type={field.type}
+                      {...register(field.name, field.rules)}
+                      className={`mt-2 w-full border-b pb-2 font-medium outline-none ${
+                        errors[field.name]
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-300 focus:border-black"
+                      }`}
+                    />
 
-                {/* CLASS */}
-                <div className="border-b py-6">
-                  <label
-                    htmlFor="className"
-                    className="text-sm text-gray-400"
-                  >
-                    Class
-                  </label>
-
-                  <input
-                    id="className"
-                    type="text"
-                    name="className"
-                    value={form.className}
-                    onChange={handleChange}
-                    className="mt-2 w-full border-b border-gray-300 pb-2 font-medium outline-none focus:border-black"
-                  />
-                </div>
-
-                {/* NIS */}
-                <div className="border-b py-6">
-                  <label
-                    htmlFor="nis"
-                    className="text-sm text-gray-400"
-                  >
-                    NIS
-                  </label>
-
-                  <input
-                    id="nis"
-                    type="text"
-                    name="nis"
-                    value={form.nis}
-                    onChange={handleChange}
-                    className="mt-2 w-full border-b border-gray-300 pb-2 font-medium outline-none focus:border-black"
-                  />
-                </div>
-
-                {/* EMAIL */}
-                <div className="border-b py-6">
-                  <label
-                    htmlFor="email"
-                    className="text-sm text-gray-400"
-                  >
-                    Email
-                  </label>
-
-                  <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    className="mt-2 w-full border-b border-gray-300 pb-2 font-medium outline-none focus:border-black"
-                  />
-                </div>
+                    {errors[field.name] && (
+                      <p className="mt-2 text-sm text-red-500">
+                        {errors[field.name].message}
+                      </p>
+                    )}
+                  </div>
+                ))}
 
                 {/* ACTION */}
                 <div className="mt-8 flex gap-3">
                   <Button
                     type="submit"
+                    disabled={!isValid}
                     className="rounded-full px-7"
                   >
                     Save Changes
@@ -174,57 +186,22 @@ function Profile() {
               /* PROFILE DATA */
               <>
                 <div className="border-t border-black">
-                  {/* NAME */}
-                  <div className="border-b py-6">
-                    <div className="flex justify-between gap-6">
-                      <span className="text-gray-400">Name</span>
+                  {fields.map((field) => (
+                    <div key={field.name} className="border-b py-6">
+                      <div className="flex justify-between gap-6">
+                        <span className="text-gray-400">{field.label}</span>
 
-                      <span className="text-right font-medium">
-                        {form.name}
-                      </span>
+                        <span className="text-right font-medium">
+                          {profile[field.name]}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* CLASS */}
-                  <div className="border-b py-6">
-                    <div className="flex justify-between gap-6">
-                      <span className="text-gray-400">Class</span>
-
-                      <span className="text-right font-medium">
-                        {form.className}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* NIS */}
-                  <div className="border-b py-6">
-                    <div className="flex justify-between gap-6">
-                      <span className="text-gray-400">NIS</span>
-
-                      <span className="text-right font-medium">
-                        {form.nis}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* EMAIL */}
-                  <div className="border-b py-6">
-                    <div className="flex justify-between gap-6">
-                      <span className="text-gray-400">Email</span>
-
-                      <span className="text-right font-medium">
-                        {form.email}
-                      </span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 {/* EDIT BUTTON */}
                 <div className="mt-8">
-                  <Button
-                    className="rounded-full px-7"
-                    onClick={() => setIsEditing(true)}
-                  >
+                  <Button className="rounded-full px-7" onClick={startEdit}>
                     Edit Profile
                   </Button>
                 </div>
@@ -253,7 +230,7 @@ function Profile() {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Role</span>
 
-                  <span>Santri</span>
+                  <span>{user?.role ?? "Santri"}</span>
                 </div>
               </div>
 
@@ -261,7 +238,7 @@ function Profile() {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Class</span>
 
-                  <span>{form.className}</span>
+                  <span>{profile.className}</span>
                 </div>
               </div>
 
@@ -294,7 +271,7 @@ function Profile() {
             <Button
               size="lg"
               className="h-14 rounded-full px-8"
-              onClick={() => setIsEditing(true)}
+              onClick={startEdit}
             >
               Edit Profile
             </Button>
