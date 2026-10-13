@@ -1,3 +1,4 @@
+
 import React from "react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate } from "react-router"
@@ -7,7 +8,7 @@ import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
 import { UseAuthStore } from "./store.jsx/UseAuthStore"
 
-// border merah kalau field error
+// Border merah kalau field error
 const errorClass = (hasError) =>
   hasError ? "border-red-500 focus-visible:ring-red-300" : ""
 
@@ -20,16 +21,16 @@ function SignIn() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     mode: "onChange",
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   })
 
-  // data = { email, password } dari react-hook-form
   const onSubmit = (data) => {
     const isSuccess = login(data.email, data.password)
 
@@ -56,19 +57,30 @@ function SignIn() {
             Welcome back
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold">Sign in</h1>
+          <h1 className="mt-2 text-3xl font-bold">
+            Sign in
+          </h1>
 
           <p className="mt-2 text-sm text-gray-500">
             Masuk untuk melanjutkan ke management system.
           </p>
         </div>
 
-        {/* error dari store (email/password salah) */}
-        {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
+        {error && (
+          <p className="mb-4 text-sm text-red-500">
+            {error}
+          </p>
+        )}
 
-        <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5"
+        >
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email
+            </Label>
 
             <Input
               id="email"
@@ -85,12 +97,16 @@ function SignIn() {
             />
 
             {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
+              <p className="text-sm text-red-500">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">
+              Password
+            </Label>
 
             <Input
               id="password"
@@ -103,18 +119,42 @@ function SignIn() {
             />
 
             {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
+              <p className="text-sm text-red-500">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
-          <Button type="submit" className="w-full">
+          <div>
+            <label
+              htmlFor="rememberMe"
+              className="flex items-center gap-2 text-sm text-gray-700"
+            >
+              <input
+                {...register("rememberMe")}
+                type="checkbox"
+                id="rememberMe"
+              />
+
+              Remember me
+            </label>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!isValid}
+          >
             Sign In
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Don't have an account?{" "}
-          <Link to="/sign-up" className="font-medium text-black underline">
+          <Link
+            to="/sign-up"
+            className="font-medium text-black underline"
+          >
             Sign up
           </Link>
         </p>

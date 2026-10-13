@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 
-import { Button } from "../components/ui/button";
-import { UseAuthStore } from "../Auth/store.jsx/UseAuthStore";
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 
-// Daftar field profil: dipakai untuk form edit maupun tampilan data
+import { Button } from "../components/ui/button"
+import { UseAuthStore } from "../Auth/store.jsx/UseAuthStore"
+
 const fields = [
   {
     name: "name",
@@ -12,14 +12,19 @@ const fields = [
     type: "text",
     rules: {
       required: "Nama wajib diisi",
-      minLength: { value: 3, message: "Nama minimal 3 karakter" },
+      minLength: {
+        value: 3,
+        message: "Nama minimal 3 karakter",
+      },
     },
   },
   {
     name: "className",
     label: "Class",
     type: "text",
-    rules: { required: "Kelas wajib diisi" },
+    rules: {
+      required: "Kelas wajib diisi",
+    },
   },
   {
     name: "nis",
@@ -27,7 +32,10 @@ const fields = [
     type: "text",
     rules: {
       required: "NIS wajib diisi",
-      pattern: { value: /^\d+$/, message: "NIS harus berupa angka" },
+      pattern: {
+        value: /^\d+$/,
+        message: "NIS harus berupa angka",
+      },
     },
   },
   {
@@ -42,22 +50,22 @@ const fields = [
       },
     },
   },
-];
+]
 
 function Profile() {
-  // Data user yang sedang login (dari store yang sama dengan SignIn)
-  const user = UseAuthStore((state) => state.user);
-  const updateUser = UseAuthStore((state) => state.updateUser);
+  const user = UseAuthStore((state) => state.user)
+  const updateUser = UseAuthStore((state) => state.updateUser)
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false)
 
-  // Data profil: awalnya diambil dari user yang login
-  const [profile, setProfile] = useState({
-    name: user?.name ?? "",
-    className: user?.className ?? "-",
-    nis: user?.nis ?? "-",
-    email: user?.email ?? "",
-  });
+  const getProfileData = (currentUser) => ({
+    name: currentUser?.name ?? "",
+    className: currentUser?.className ?? "",
+    nis: currentUser?.nis ?? "",
+    email: currentUser?.email ?? "",
+  })
+
+  const [profile, setProfile] = useState(() => getProfileData(user))
 
   const {
     register,
@@ -66,21 +74,41 @@ function Profile() {
     formState: { errors, isValid },
   } = useForm({
     mode: "onChange",
-    defaultValues: profile,
-  });
+    defaultValues: getProfileData(user),
+  })
 
-  // Klik Edit: isi form dengan data profil terbaru
+  // Sinkronkan data profil ketika data user di store berubah
+  useEffect(() => {
+    const updatedProfile = getProfileData(user)
+
+    setProfile(updatedProfile)
+    reset(updatedProfile)
+  }, [user, reset])
+
+  // Buka form edit dengan data profil terakhir
   const startEdit = () => {
-    reset(profile);
-    setIsEditing(true);
-  };
+    reset(profile)
+    setIsEditing(true)
+  }
 
-  // Klik Save: simpan data baru ke profil dan ke store
+  // Batalkan perubahan dan kembalikan data sebelumnya
+  const cancelEdit = () => {
+    reset(profile)
+    setIsEditing(false)
+  }
+
+  // Simpan perubahan ke state profil dan Zustand
   const onSubmit = (data) => {
-    setProfile(data);
-    updateUser(data);
-    setIsEditing(false);
-  };
+    const updatedProfile = {
+      ...profile,
+      ...data,
+    }
+
+    updateUser(data)
+    setProfile(updatedProfile)
+    reset(updatedProfile)
+    setIsEditing(false)
+  }
 
   return (
     <div className="bg-white text-black">
@@ -128,7 +156,6 @@ function Profile() {
 
           <div>
             {isEditing ? (
-              /* EDIT FORM */
               <form
                 noValidate
                 onSubmit={handleSubmit(onSubmit)}
@@ -162,7 +189,6 @@ function Profile() {
                   </div>
                 ))}
 
-                {/* ACTION */}
                 <div className="mt-8 flex gap-3">
                   <Button
                     type="submit"
@@ -176,32 +202,35 @@ function Profile() {
                     type="button"
                     variant="outline"
                     className="rounded-full px-7"
-                    onClick={() => setIsEditing(false)}
+                    onClick={cancelEdit}
                   >
                     Cancel
                   </Button>
                 </div>
               </form>
             ) : (
-              /* PROFILE DATA */
               <>
                 <div className="border-t border-black">
                   {fields.map((field) => (
                     <div key={field.name} className="border-b py-6">
                       <div className="flex justify-between gap-6">
-                        <span className="text-gray-400">{field.label}</span>
+                        <span className="text-gray-400">
+                          {field.label}
+                        </span>
 
                         <span className="text-right font-medium">
-                          {profile[field.name]}
+                          {profile[field.name] || "-"}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* EDIT BUTTON */}
                 <div className="mt-8">
-                  <Button className="rounded-full px-7" onClick={startEdit}>
+                  <Button
+                    className="rounded-full px-7"
+                    onClick={startEdit}
+                  >
                     Edit Profile
                   </Button>
                 </div>
@@ -229,7 +258,6 @@ function Profile() {
               <div className="border-t border-gray-800 py-6">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Role</span>
-
                   <span>{user?.role ?? "Santri"}</span>
                 </div>
               </div>
@@ -237,15 +265,13 @@ function Profile() {
               <div className="border-t border-gray-800 py-6">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Class</span>
-
-                  <span>{profile.className}</span>
+                  <span>{profile.className || "-"}</span>
                 </div>
               </div>
 
               <div className="border-y border-gray-800 py-6">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Account</span>
-
                   <span>Active</span>
                 </div>
               </div>
@@ -279,7 +305,7 @@ function Profile() {
         </div>
       </section>
     </div>
-  );
+  )
 }
 
-export default Profile;
+export default Profile
