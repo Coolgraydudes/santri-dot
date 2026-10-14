@@ -1,13 +1,14 @@
 import React from "react"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Link, useNavigate } from "react-router"
 
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
+import { signUpSchema } from "../schemas/signUpSchemas"
 import { UseAuthStore } from "./store.jsx/UseAuthStore"
 
-// border merah kalau field error
 const errorClass = (hasError) =>
   hasError ? "border-red-500 focus-visible:ring-red-300" : ""
 
@@ -18,10 +19,10 @@ function SignUp() {
   const {
     register,
     handleSubmit,
-    watch,
     setError,
     formState: { errors, isValid },
   } = useForm({
+    resolver: zodResolver(signUpSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -33,10 +34,6 @@ function SignUp() {
     },
   })
 
-  // pantau password, dipakai untuk mengecek confirm password
-  const password = watch("password")
-
-  // data = { name, email, password, confirmPassword }
   const onSubmit = (data) => {
     const isSuccess = signUp({
       name: data.name,
@@ -76,133 +73,38 @@ function SignUp() {
         <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-
-            <Input
-              id="name"
-              type="text"
-              placeholder="Your name"
-              className={errorClass(errors.name)}
-              {...register("name", {
-                required: "Nama wajib diisi",
-                minLength: {
-                  value: 3,
-                  message: "Nama minimal 3 karakter",
-                },
-              })}
-            />
-
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
-            )}
+            <Input id="name" type="text" placeholder="Your name" className={errorClass(errors.name)} {...register("name")} />
+            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="class-name">Class</Label>
-
-            <Input
-              id="class-name"
-              type="text"
-              placeholder="Contoh: IX A"
-              className={errorClass(errors.className)}
-              {...register("className", {
-                required: "Kelas wajib diisi",
-              })}
-            />
-
-            {errors.className && (
-              <p className="text-sm text-red-500">
-                {errors.className.message}
-              </p>
-            )}
+            <Input id="class-name" type="text" placeholder="Contoh: IX A" className={errorClass(errors.className)} {...register("className")} />
+            {errors.className && <p className="text-sm text-red-500">{errors.className.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="nis">NIS</Label>
-
-            <Input
-              id="nis"
-              type="text"
-              inputMode="numeric"
-              placeholder="Contoh: 20260001"
-              className={errorClass(errors.nis)}
-              {...register("nis", {
-                required: "NIS wajib diisi",
-                pattern: {
-                  value: /^\d+$/,
-                  message: "NIS harus berupa angka",
-                },
-              })}
-            />
-
-            {errors.nis && (
-              <p className="text-sm text-red-500">{errors.nis.message}</p>
-            )}
+            <Input id="nis" type="text" inputMode="numeric" placeholder="Contoh: 20260001" className={errorClass(errors.nis)} {...register("nis")} />
+            {errors.nis && <p className="text-sm text-red-500">{errors.nis.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              className={errorClass(errors.email)}
-              {...register("email", {
-                required: "Email wajib diisi",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Format email tidak valid",
-                },
-              })}
-            />
-
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
+            <Input id="email" type="email" placeholder="you@example.com" className={errorClass(errors.email)} {...register("email")} />
+            {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              className={errorClass(errors.password)}
-              {...register("password", {
-                required: "Password wajib diisi",
-                minLength: {
-                  value: 6,
-                  message: "Password minimal 6 karakter",
-                },
-              })}
-            />
-
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
+            <Input id="password" type="password" placeholder="••••••••" className={errorClass(errors.password)} {...register("password")} />
+            {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirm-password">Confirm Password</Label>
-
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="••••••••"
-              className={errorClass(errors.confirmPassword)}
-              {...register("confirmPassword", {
-                required: "Konfirmasi password wajib diisi",
-                validate: (value) =>
-                  value === password || "Password tidak sama",
-              })}
-            />
-
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500">
-                {errors.confirmPassword.message}
-              </p>
-            )}
+            <Input id="confirm-password" type="password" placeholder="••••••••" className={errorClass(errors.confirmPassword)} {...register("confirmPassword")} />
+            {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
           </div>
 
           <Button type="submit" disabled={!isValid} className="w-full">
